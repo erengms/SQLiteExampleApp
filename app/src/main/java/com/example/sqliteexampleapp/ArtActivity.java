@@ -13,9 +13,11 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.ImageDecoder;
 import android.media.Image;
 import android.net.Uri;
@@ -51,6 +53,42 @@ public class ArtActivity extends AppCompatActivity {
         setContentView(view);
 
         registerLauncher();
+
+        database = getApplicationContext().openOrCreateDatabase("Arts", MODE_PRIVATE, null);
+
+        Intent intent = getIntent();
+        String info  = intent.getStringExtra("info");
+
+        if (info.equals("new")){
+            //new Art
+            binding.editTextName.setText("");
+            binding.editTextYear.setText("");
+            binding.imageViewSelect.setImageResource(R.drawable.ic_round_image_search_24);
+
+        } else {
+            int artId = intent.getIntExtra("artId", 1);
+            binding.buttonSave.setVisibility(View.INVISIBLE);
+
+            try {
+                Cursor cursor = database.rawQuery("SELECT * FROM arts WHERE id = ?", new String[] {String.valueOf(artId)} );
+                int nameIx = cursor.getColumnIndex("name");
+                int yearIx = cursor.getColumnIndex("year");
+                int imageIx = cursor.getColumnIndex("image");
+
+                while (cursor.moveToNext()){
+                    binding.editTextName.setText(cursor.getString(nameIx));
+                    binding.editTextYear.setText(cursor.getString(yearIx));
+
+                    byte[] bytes = cursor.getBlob(imageIx);
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                    binding.imageViewSelect.setImageBitmap(bitmap);
+                }
+                cursor.close();
+
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
 
         //select image
         binding.imageViewSelect.setOnClickListener(new View.OnClickListener() {
@@ -103,7 +141,6 @@ public class ArtActivity extends AppCompatActivity {
 
                 // db oluştur ve verileri kaydet
                 try {
-                    database = getApplicationContext().openOrCreateDatabase("Arts", MODE_ENABLE_WRITE_AHEAD_LOGGING, null);
                     database.execSQL("CREATE TABLE IF NOT EXISTS arts (id INTEGER PRIMARY KEY, name VARCHAR, year VARCHAR, image BLOB)");
 
                     String sqlString = "INSERT INTO arts (name, year, image) VALUES(?, ?, ?)";

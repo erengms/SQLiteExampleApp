@@ -79,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.add_art){
             Intent intent = new Intent(this, ArtActivity.class);
+            intent.putExtra("info", "new");
             startActivity(intent);
         }
 
