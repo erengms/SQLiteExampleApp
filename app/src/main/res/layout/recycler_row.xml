@@ -8,10 +8,11 @@
     <TextView
         android:id="@+id/recyclerViewText"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="40dp"
         android:text="Test"
         android:gravity="center"
+        android:background="@color/md_purple_100"
         android:textSize="22sp"
-        android:textColor="@color/purple_700"/>
+        android:textColor="@color/black"/>
 
 </LinearLayout>
