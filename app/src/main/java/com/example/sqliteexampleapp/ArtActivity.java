@@ -13,6 +13,8 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
 import android.media.Image;
@@ -26,6 +28,8 @@ import android.widget.Toast;
 import com.example.sqliteexampleapp.databinding.ActivityArtBinding;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.io.ByteArrayOutputStream;
+
 public class ArtActivity extends AppCompatActivity {
 
     private ActivityArtBinding binding;
@@ -35,6 +39,8 @@ public class ArtActivity extends AppCompatActivity {
     private ActivityResultLauncher<String> permissionLauncher; // İzin verilince napacaz
 
     private Bitmap selectedImage;
+
+    private SQLiteDatabase database;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +52,7 @@ public class ArtActivity extends AppCompatActivity {
 
         registerLauncher();
 
+        //select image
         binding.imageViewSelect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -80,6 +87,42 @@ public class ArtActivity extends AppCompatActivity {
 
             }
         });
+
+        //save button click
+        binding.buttonSave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String art_name = binding.editTextName.getText().toString();
+                String art_year = binding.editTextYear.getText().toString();
+
+                Bitmap smallImage = makeSmallerImage(selectedImage, 300);
+
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                smallImage.compress(Bitmap.CompressFormat.PNG, 80, outputStream);
+                byte[] byteArray = outputStream.toByteArray();
+
+                // db oluştur ve verileri kaydet
+                try {
+                    database = getApplicationContext().openOrCreateDatabase("Arts", MODE_ENABLE_WRITE_AHEAD_LOGGING, null);
+                    database.execSQL("CREATE TABLE IF NOT EXISTS arts (id INTEGER PRIMARY KEY, name VARCHAR, year VARCHAR, image BLOB)");
+
+                    String sqlString = "INSERT INTO arts (name, year, image) VALUES(?, ?, ?)";
+                    SQLiteStatement sqLiteStatement = database.compileStatement(sqlString);
+                    // soru işaretleri 1, 2, 3, 4, diye artan indexli gidiyor.
+                    sqLiteStatement.bindString(1, art_name);
+                    sqLiteStatement.bindString(2, art_year);
+                    sqLiteStatement.bindBlob(3, byteArray);
+                    sqLiteStatement.execute();
+
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+
+                Intent intent = new Intent(ArtActivity.this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); //Önceki açık activityleri sonlandırır.
+                startActivity(intent);
+            }
+        });
     }
 
     public void registerLauncher(){
@@ -99,12 +142,11 @@ public class ArtActivity extends AppCompatActivity {
 
                                 if (Build.VERSION.SDK_INT >= 28){
                                     ImageDecoder.Source source = ImageDecoder.createSource(ArtActivity.this.getContentResolver(), imageData);
-                                    selectedImage = ImageDecoder.decodeBitmap(source);
-                                    binding.imageViewSelect.setImageBitmap(selectedImage);
+                                    selectedImage = ImageDecoder.decodeBitmap(source); //Bitmap'e çevirdik
                                 } else {
                                     selectedImage = MediaStore.Images.Media.getBitmap(ArtActivity.this.getContentResolver(), imageData);
-                                    binding.imageViewSelect.setImageBitmap(selectedImage);
                                 }
+                                binding.imageViewSelect.setImageBitmap(selectedImage);
 
                             } catch (Exception e){
                                 e.printStackTrace();
@@ -129,6 +171,25 @@ public class ArtActivity extends AppCompatActivity {
         });
 
 
+    }
+
+    //Bitmap file size küçültme
+    public Bitmap makeSmallerImage(Bitmap image, int maxSize){
+        int width = image.getWidth();
+        int height = image.getHeight();
+        float bitmapRatio = (float) width / (float) height;
+
+        if (bitmapRatio > 1) {
+            //landscape image
+            width = maxSize;
+            height = (int) (width / bitmapRatio);
+        } else {
+            // portrait image
+            height = maxSize;
+            width = (int) (height * bitmapRatio);
+        }
+
+        return Bitmap.createScaledBitmap(image, width, height, true);
     }
 
 

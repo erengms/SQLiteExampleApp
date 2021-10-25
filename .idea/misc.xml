@@ -6,6 +6,7 @@
         <entry key="app/src/main/res/drawable/ic_round_image_search_24.xml" value="0.3802083333333333" />
         <entry key="app/src/main/res/layout/activity_art.xml" value="0.25" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/recycler_row.xml" value="0.25" />
         <entry key="app/src/main/res/menu/art_menu.xml" value="0.25" />
       </map>
     </option>
