@@ -7,6 +7,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -48,12 +50,17 @@ public class MainActivity extends AppCompatActivity {
 
             int idIx = cursor.getColumnIndex("id");
             int nameIx = cursor.getColumnIndex("name");
+            int imageIx = cursor.getColumnIndex("image");
 
             while (cursor.moveToNext()){
                 int id = cursor.getInt(idIx);
                 String name = cursor.getString(nameIx);
 
-                Art art = new Art(id,name);
+                byte[] bytes = cursor.getBlob(imageIx);
+                Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+
+
+                Art art = new Art(id,name, bitmap);
                 artArrayList.add(art);
             }
 

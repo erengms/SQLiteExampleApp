@@ -30,6 +30,7 @@ public class ArtAdapter extends RecyclerView.Adapter<ArtAdapter.ArtHolder> {
     @Override
     public void onBindViewHolder(@NonNull ArtHolder holder, int position) {
         holder.binding.recyclerViewText.setText(artArrayList.get(position).name);
+        holder.binding.recyclerviewImage.setImageBitmap(artArrayList.get(position).bitmap);
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
